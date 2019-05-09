@@ -14,12 +14,11 @@ export default {
     font-weight: 800;
     width: 100%;
     height: 60px;
-    background-color: #747d8c;
+    background-color: rgba(255, 255, 255, .3);
     color: #000;
     text-align: center;
     line-height: 50px;
-    /* margin-bottom: 3px; */
-    /* box-shadow: 0 3px 3px #2f3542; */
-    border-radius: 5px 5px 0px 0px;
+    border-radius: 5px;
+    margin-bottom: 5px;
   }
 </style>

@@ -6,15 +6,15 @@
         <option value="2">中级</option>
         <option value="1">初级</option>
       </select>
-      <label for="width">宽:</label><input v-model="width" id="width" />
-      <label for="height">高:</label><input v-model="height" id="height" />
+      <label for="row">宽:</label><input v-model="row" id="row" />
+      <label for="col">高:</label><input v-model="col" id="col" />
       <label for="sweeps">雷:</label><input v-model="sweeps" id="sweeps" />
     </div>
     <ul>
       <li
         v-for = "item in list"
         :key = "item.id"
-        @click="handleSubmit"
+        @click="handleSubmit(item.id)"
       >{{item.msg}}</li>
     </ul>
   </div>
@@ -38,18 +38,30 @@ export default {
           msg: '重置'
         }
       ],
-      width: '30',
-      height: '16',
+      row: '30',
+      col: '16',
       sweeps: '99',
       level: '3'
     }
   },
   methods: {
-    handleSubmit () {
+    handleSubmit (id) {
+      // if (!confirm('将会重置棋盘？确认吗？')) return
+      var initMsg
+      if (id === 2 || id === 3) {
+        initMsg = {
+          row: 30,
+          col: 16,
+          sweeps: 99,
+          level: 3
+        }
+        this.$emit('start', initMsg)
+        return
+      }
       var scope = this
-      var initMsg = {
-        width: scope.width,
-        height: scope.height,
+      initMsg = {
+        row: scope.row,
+        col: scope.col,
         sweeps: scope.sweeps,
         level: scope.level
       }
@@ -58,14 +70,14 @@ export default {
     handleChange (e) {
       this.level = +e.target.value
       if (this.level === 1) {
-        this.height = this.width = 9
+        this.col = this.row = 9
         this.sweeps = 10
       } else if (this.level === 2) {
-        this.height = this.width = 16
+        this.col = this.row = 16
         this.sweeps = 40
       } else {
-        this.width = 30
-        this.height = 16
+        this.row = 30
+        this.col = 16
         this.sweeps = 99
       }
     }
@@ -77,28 +89,41 @@ export default {
   div#score {
     width: 100px;
     height: 475px;
-    background-color: #747d8c;
+    background-color: rgba(255, 255, 255, .3);
     position: absolute;
     right: 0;
     box-shadow: -2px 0 2px #2f3542;
+    border-radius: 10px;
   }
   div#input::after {
     content: "";
     clear: both;
     display: block;
   }
-  select {
+  select, option {
+    appearance:none;
     font-size: 16px;
-    border-radius: 5px;
     border: none;
     display: block;
+    outline: none;
     width: 90px;
     height: 30px;
-    margin: 20px 5px 5px;
     padding-left: 20px;
     outline: none;
+    transition: all .5s;
+    height: 44px;
+    margin: 5px;
+    line-height: 44px;
+    text-align: center;
+    background-color: #fff;
     box-sizing: border-box;
-    /* box-shadow: 0 0 0 5p rgba(255, 255, 255, .4); */
+    border-radius: 5px;
+    transition: all .5s;
+  }
+  select:hover {
+    cursor: pointer;
+    background-color: #ff6b81;
+    box-shadow: 0 0 0 2px #fff;
     transition: all .5s;
   }
   input {
@@ -116,8 +141,8 @@ export default {
     transition: all .5s;
   }
   input:focus {
-    background-color: rgba(255, 255, 255, .4);
-    border-color: #fff;
+    background-color: #ff6b81;
+    border: 2px solid #fff;
   }
   label {
     display: block;
@@ -132,7 +157,7 @@ export default {
   }
   ul {
     position: absolute;
-    bottom: 10px;
+    bottom: 5px;
   }
   li {
     height: 44px;
@@ -140,14 +165,14 @@ export default {
     margin: 3px 5px;
     line-height: 44px;
     text-align: center;
-    background-color: rgba(255, 255, 255, .4);
+    background-color: #fff;
     box-sizing: border-box;
     border-radius: 5px;
     transition: all .5s;
   }
   li:hover {
     cursor: pointer;
-    background-color: #66ccff;
+    background-color: #ff6b81;
     box-shadow: 0 0 0 2px #fff;
   }
 </style>

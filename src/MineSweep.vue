@@ -52,12 +52,10 @@ div#app {
   margin: 150px auto;
 }
 div#container {
+  border-radius: 10px;
   content: "";
   width: 100%;
   position: relative;
   height: 475px;
-  /* background-color: rgba(102, 204, 255 .3); */
-  background-color: #747d8c;
-  /* margin: 20px 0; */
 }
 </style>

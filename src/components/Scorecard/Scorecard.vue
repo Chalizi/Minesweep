@@ -89,20 +89,29 @@ export default {
 <style scoped>
 div#score {
   width: 100px;
-  height: 475px;
-  background-color: #747d8c;
+  height: 470px;
+  padding-top: 5px;
+  background-color: rgba(255, 255, 255, .3);
   position: absolute;
   box-shadow: 2px 0px 2px#2f3542;
   z-index: 5;
+  border-radius: 10px;
 }
 li {
-  height: 50px;
-  line-height: 50px;
-  text-align: left;
+  background-color: #fff;
   padding-left: 5px;
   position: relative;
+  height: 44px;
+  width: 90px;
+  margin: 3px 5px;
+  line-height: 44px;
+  box-sizing: border-box;
+  border-radius: 5px;
+  transition: all .5s;
 }
 li div {
+  color: red;
+  font-weight: 800;
   position: absolute;
   top: 0;
   right: 0;
@@ -115,7 +124,7 @@ ul:first-of-type {
 }
 ul:last-of-type {
   position: absolute;
-  bottom: 10px;
+  bottom: 5px;
 }
 ul:last-of-type li {
   height: 44px;
@@ -123,14 +132,13 @@ ul:last-of-type li {
   margin: 3px 5px;
   line-height: 44px;
   text-align: center;
-  background-color: rgba(255, 255, 255, .4);
   box-sizing: border-box;
   border-radius: 5px;
   transition: all .5s;
 }
 ul:last-of-type li:hover {
   cursor: pointer;
-  background-color: #66ccff;
+  background-color: #ff6b81;
   box-shadow: 0 0 0 2px #fff;
 }
 </style>
