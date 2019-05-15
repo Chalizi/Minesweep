@@ -3,13 +3,16 @@
     <Header></Header>
     <div id="container">
       <Scorecard
-        :inInitMsg = "initMsg"
+        :inInitMsg = "initCekMsg"
+        :inInitState = "initState"
       ></Scorecard>
       <Checkerboard
-        :inInitMsg = "initMsg"
+        :inInitMsg = "initMenuMsg"
+        @gamestate = "handleState"
+        @game = "handleGame"
       ></Checkerboard>
       <Menu
-        @start="handleStart"
+        @newGame = "handleNewGame"
       ></Menu>
     </div>
     <Footer></Footer>
@@ -27,7 +30,9 @@ import Checkerboard from './components/Checkerboard/Checkerboard'
 export default {
   data () {
     return {
-      initMsg: {}
+      initMenuMsg: null,
+      initCekMsg: null,
+      initState: false
     }
   },
   name: 'MineSweep',
@@ -39,8 +44,14 @@ export default {
     'Checkerboard': Checkerboard
   },
   methods: {
-    handleStart (initMsg) {
-      this.initMsg = initMsg
+    handleNewGame (initMenuMsg) {
+      this.initMenuMsg = initMenuMsg
+    },
+    handleGame (initCekMsg) {
+      this.initCekMsg = initCekMsg
+    },
+    handleState (bol) {
+      this.initState = bol
     }
   }
 }

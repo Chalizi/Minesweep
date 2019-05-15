@@ -27,7 +27,7 @@ export default {
       list: [
         {
           id: 1,
-          msg: '开始'
+          msg: '新的游戏'
         },
         {
           id: 2,
@@ -38,34 +38,38 @@ export default {
           msg: '重置'
         }
       ],
-      row: '30',
-      col: '16',
-      sweeps: '99',
-      level: '3'
+      row: 30,
+      col: 16,
+      sweeps: 99,
+      level: 3,
+      click: false
     }
   },
   methods: {
     handleSubmit (id) {
       // if (!confirm('将会重置棋盘？确认吗？')) return
-      var initMsg
+      var initMenuMsg
+      var click = !this.click
       if (id === 2 || id === 3) {
-        initMsg = {
-          row: 30,
-          col: 16,
+        initMenuMsg = {
+          row: 0,
+          col: 0,
           sweeps: 99,
-          level: 3
+          level: 3,
+          click: click
         }
-        this.$emit('start', initMsg)
+        this.$emit('newGame', initMenuMsg)
         return
       }
       var scope = this
-      initMsg = {
-        row: scope.row,
-        col: scope.col,
-        sweeps: scope.sweeps,
-        level: scope.level
+      initMenuMsg = {
+        row: +scope.row,
+        col: +scope.col,
+        sweeps: +scope.sweeps,
+        level: +scope.level,
+        click: scope.click
       }
-      this.$emit('start', initMsg)
+      this.$emit('newGame', initMenuMsg)
     },
     handleChange (e) {
       this.level = +e.target.value

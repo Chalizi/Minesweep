@@ -4,6 +4,7 @@
       <li
         v-for="item in list"
         :key = "item.id"
+        @click="handleClick(item)"
       >
       {{item.msg + ":"}}
         <div>{{item.content}}</div>
@@ -21,7 +22,7 @@
 
 <script>
 export default {
-  props: ['inInitMsg'],
+  props: ['inInitMsg', 'inInitState'],
   data () {
     return {
       list: [
@@ -38,7 +39,7 @@ export default {
         {
           id: 3,
           msg: '时间',
-          content: (new Date()).getHours()
+          content: 0
         },
         {
           id: 4,
@@ -72,15 +73,26 @@ export default {
       height: '16',
       sweeps: '99',
       flags: '99',
-      level: '3'
+      level: '3',
+      clock: null
     }
   },
   watch: {
     inInitMsg (newval, oldval) {
-      this.width = newval.width
-      this.height = newval.height
-      this.list[1].content = this.list[0].content = this.sweeps = newval.sweeps
-      this.list[3].content = this.level = newval.level
+      this.list[1].content = this.inInitMsg.flags
+      this.list[3].content = this.inInitMsg.level
+    },
+    inInitState (newval, oldval) {
+      var scope = this
+      var seconds = 0
+      var fun = function () {
+        scope.list[2].content = ++seconds
+      }
+      if (newval) {
+        this.clock = setInterval(fun, 1000)
+      } else {
+        clearInterval(this.clock)
+      }
     }
   }
 }

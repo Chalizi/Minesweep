@@ -1,5 +1,5 @@
 <template>
-  <div>@CopyRight Chalizi</div>
+  <div>©CopyRight Chalizi</div>
 </template>
 
 <script>

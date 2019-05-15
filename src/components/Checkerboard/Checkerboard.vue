@@ -1,25 +1,27 @@
 <template>
-<div :style="styMsg">
+<div @contextmenu="handleDefault" :style="styDivMsg">
   <ul>
     <li
       v-for = "item in list"
       :key = "item.id"
       @click = "handleClick(item)"
-      :class = "{
-        'shMines': item.packing
-      }"
+      @contextmenu = "handleMouseup"
+      :index = "item.id - 1"
+      :class = "{'styLiMsg': !item.opening}"
     >{{item.msg}}</li>
   </ul>
 </div>
 </template>
 
 <script>
+import '../../assets/js/game.js'
+
 export default {
   props: ['inInitMsg'],
   data () {
     return {
       list: [],
-      styMsg: {
+      styDivMsg: {
         padding: '0',
         width: '880px',
         left: '100px',
@@ -27,117 +29,398 @@ export default {
         maxHeight: '464px',
         maxWidth: '870px'
       },
-      numOpens: 0,
-      arrMineId: [],
-      arrAds: []
+      numOpens: 0, // 打开的棋子个数
+      arrMineId: [], // 所有雷的id
+      isMarkTrue: 0, // 标记正确的数量
+      initCekMsg: {
+        flags: 0
+      }
     }
   },
   watch: {
     // 监控棋盘数据
     inInitMsg (newval, oldval) {
-      this.initAds()
-      // 给当前模板生成对应样式
-      var styWidth = newval.row * 29
-      var styHeight = newval.col * 29 + 10
-      newval.row === 0 || newval.col === 0 ? this.styMsg.padding = 0 : this.styMsg.padding = '5px'
-      var width = newval.row
-      var height = newval.col
-      this.styMsg.row = styWidth + 'px'
-      this.styMsg.left = (1080 - styWidth) / 2 + 'px'
-      this.styMsg.top = (475 - styHeight) / 2 + 'px'
-      this.styMsg.maxWidth = styWidth + 'px'
-      this.styMsg.maxHeight = styHeight + 'px'
-      // 格式化棋盘
-      this.list = []
-      // 初始化棋盘数据
-      for (var i = 1; i < width * height + 1; i++) {
-        var scope = this
-        this.list.push({
-          id: i,
-          msg: '',
-          neighbor: scope.nbrItem(this),
-          ads: {
-            row: Math.ceil(i / newval.row),
-            col: i - (Math.ceil(i / newval.row) - 1) * newval.row
-          },
-          packing: 'true',
-          bad: this.arrMineId.includes(i) ? 1 : 0
-        })
-      }
+      var row = newval.row // 行
+      var col = newval.col // 列
+      this.styChange(newval, col, row) // 改变当前模板样式
+      this.format(newval, row, col) // 棋盘格式化
+      this.initCekMsg.flags = newval.sweeps // 绑定旗帜的数量
+      this.changeSre() // 雷数改变，旗帜也改
     }
   },
   methods: {
-    // 点击旗子
+    format (newval, col, row) {
+      var scope = this // 保存this
+      this.list = [] // 棋盘
+      this.numOpens = 0 // 打开的棋子个数
+      this.isMarkTrue = 0 // 标记正确的数量
+      this.arrMineId = [] // 所有雷的id
+      // 计算棋盘数据
+      for (var i = 1; i < col * row + 1; i++) {
+        this.list.push({
+          id: i, // 旗子id
+          msg: '', // 旗子数据
+          neighbor: null, // 旗子邻居
+          ads: { // 旗子坐标
+            row: Math.ceil(i / col),
+            col: i - (Math.ceil(i / col) - 1) * col
+          },
+          opening: false, // 是否打开
+          bad: false, // 是雷吗
+          arrNbrId: [], // 周围格子的id
+          numNbrBad: undefined, // 周围雷的数量
+          flag: false // 标记了吗
+        })
+      }
+      for (var j = 1; j < col * row + 1; j++) {
+        this.list[j - 1].neighbor = scope.nbrItem(scope.list[j - 1], col, row) // 计算所有旗子的邻居
+        this.list[j - 1].arrNbrId = scope.arrNbrId(scope.list[j - 1]) // 计算所有旗子邻居的id
+      }
+    },
+    // 赢
+    victory () {
+      alert('你赢了')
+      this.$emit('gamestate', false)
+    },
+    // 输
+    defeat () {
+      this.$emit('gamestate', false)
+      var max = this.inInitMsg.row * this.inInitMsg.col
+      for (var i = 0; i < max; i++) {
+        var item = this.list[i]
+        if (item.opening) continue
+        if (item.flag) continue
+        var obj = this.searchMines(item)
+        var num = obj.num ? obj.num : '' // 查雷
+        item.numNbrBad = num
+        item.opening = !item.opening // 打开旗子
+        item.bad ? item.msg = '💣' : item.msg = num // 检测雷
+      }
+      alert('你输了')
+    },
+    // 打开旗子
+    opend (item) {
+      this.numOpens++
+      var obj = this.searchMines(item)
+      var num = obj.num ? obj.num : '' // 查雷
+      item.numNbrBad = num // 周围雷的数量
+      item.opening = !item.opening // 打开旗子
+      item.bad ? item.msg = '💣' : item.msg = num // 检测雷
+    },
+    // 标记旗子
+    marked (item) {
+      if (item.flag) {
+        ++this.initCekMsg.flags
+      } else {
+        --this.initCekMsg.flags
+      }
+      item.flag = !item.flag // 旗子已经标记
+      item.flag ? item.msg = '🚩' : item.msg = '' // 显示标记
+      if (item.flag && item.bad) {
+        ++this.isMarkTrue
+      } else if (!item.flag && item.bad) {
+        --this.isMarkTrue
+      }
+      this.changeSre() // 同步旗帜数量
+    },
+    handleDb (item) {
+      if (!item.opening) return // 跳过没打开的旗子
+      var num = this.searchMines(item).num
+      if (num === 0) return // 跳过周围没有雷的旗子
+      if (num === this.arrNbrFlags(item).length) {
+        var arrItem = this.arrNbrnOpen(item)
+        for (var i = 0; i < arrItem.length; i++) {
+          if (arrItem[i].bad) this.defeat(arrItem[i]) // 双击触发了雷
+          if (arrItem[i].opening) continue // 跳过已经打开的旗子
+          if (this.searchMines(arrItem[i]).num === 0) {
+            var arrItems = this.allNei(this.clickZero(arrItem[i])).target
+            for (var j = 0; j < arrItems.length; j++) {
+              this.opend(arrItems[j])
+            }
+            continue
+          }
+          this.opend(arrItem[i])
+        }
+      }
+    },
+    // 左键事件
     handleClick (item) {
-      // 第一次点击旗子
-      if (this.addOpens()) {
-        this.arrMineId = this.ranDom(item)
+      if (item.opening) {
+        this.handleDb(item)
         return
       }
-      if (!item.packing) return
-      item.packing = !item.packing
-      item.bad ? item.msg = '✖' : item.msg = ''
+      if (item.flag) return // 如果打开或者已经标记了旗帜，跳过
+      if (item.bad) {
+        this.defeat() // 输了
+        return
+      }
+      if (!(this.searchMines(item).num === 0) && this.numOpens) {
+        this.opend(item)
+        return
+      }
+      this.addOpens() // 有多少个旗子打开了
+      // 第一次点击旗子
+      if (!this.numOpens) { // 还没有旗子打开
+        this.$emit('gamestate', true)
+        this.ranDom(item) // 生成雷id
+      }
+      var arrItem = this.allNei(this.clickZero(item)).target
+      for (var i = 0; i < arrItem.length; i++) {
+        this.opend(arrItem[i])
+      }
+    },
+    clickZero (item) {
+      var obj = {
+        newval: {
+          target: [item],
+          id: [item.id],
+          len: 1,
+          rounds: 1
+        },
+        sum: {
+          target: [item],
+          id: [item.id],
+          len: 1
+        }
+      }
+      return this.searchZero(obj)
+    },
+    // 右键事件
+    handleMouseup (e) {
+      e.preventDefault()
+      var id = e.target.getAttribute('index')
+      var item = this.list[id]
+      if (item.opening) return // 未打开的旗子
+      this.marked(item)
+      if (this.isMarkTrue === this.inInitMsg.sweeps) this.victory()
+    },
+    handleDefault (e) {
+      e.preventDefault()
+    },
+    // 给当前模板生成对应样式
+    styChange (newval, col, row) {
+      var styWidth = row * 29 // 棋盘长
+      var styHeight = col * 29 + 10 // 棋盘高
+      col === 0 || row === 0 ? this.styDivMsg.padding = 0 : this.styDivMsg.padding = '5px' // 棋盘内边距
+      this.styDivMsg.col = styWidth + 'px' // 宽赋值
+      this.styDivMsg.left = (1080 - styWidth) / 2 + 'px' // left赋值
+      this.styDivMsg.top = (475 - styHeight) / 2 + 'px' // top赋值
+      this.styDivMsg.maxWidth = styWidth + 'px' // 最大宽赋值
+      this.styDivMsg.maxHeight = styHeight + 'px' // 最大高赋值
     },
     // 统计打开状态下的旗子数量
     addOpens () {
       for (var i = 0; i < this.list.length; i++) {
-        !this.list[i].packing ? this.numOpens++ : void 0
+        this.list[i].opening ? this.numOpens++ : void 0 // 检查打开了多少个旗子
       }
     },
-    // 生成一个素组，存放所有雷所在的坐标
+    // 同步雷和旗帜的数量
+    changeSre () {
+      var initCekMsg = null
+      var scope = this
+      initCekMsg = {
+        flags: scope.initCekMsg.flags,
+        level: scope.inInitMsg.level
+      }
+      this.$emit('game', initCekMsg)
+    },
+    // 查雷
+    searchMines (item) {
+      var obj = {
+        num: 0,
+        arrId: []
+      }
+      var nei = item.neighbor
+      var num = 0
+      for (var val in nei) {
+        if (!nei[val]) continue
+        if (nei[val].opening) continue
+        nei[val].bad ? ++num : void 0
+        nei[val].bad ? obj.arrId.push(nei[val].id) : void 0
+      }
+      obj.num = num
+      return obj
+    },
+    searchZero (obj) {
+      var oldval = {
+        target: [],
+        id: [],
+        len: 0,
+        rounds: 0
+      }
+      if (obj.oldval) {
+        oldval.target = obj.oldval.target
+        oldval.id = obj.oldval.id
+        oldval.len = obj.oldval.target.length
+        oldval.rounds = obj.oldval.rounds
+      }
+      var newval = {
+        target: obj.newval.target,
+        id: obj.newval.id,
+        len: obj.newval.target.length,
+        rounds: obj.newval.rounds
+      }
+      var sum = {
+        target: obj.sum.target,
+        id: obj.sum.id,
+        len: obj.sum.target.length
+      }
+      var newTarget = []
+      var newId = []
+      var newLen = 0
+      var newRounds = 0
+      for (var i = 0; i < newval.len; i++) {
+        var item = newval.target[i]
+        if (item.opening) continue // 跳过打开状态的旗子
+        var nei = newval.target[i].neighbor
+        for (var val in nei) {
+          if (!nei[val]) continue // 跳过undefined
+          var id = nei[val].id
+          if (oldval.id.includes(id) || newval.id.includes(id)) continue // 跳过这一轮和上一轮已经有的元素
+          if (newId.includes(id)) continue // 跳过刚查找的元素中已经有的元素
+          var num = this.searchMines(nei[val]).num
+          if (num === 0) {
+            newTarget.push(nei[val])
+            newId.push(nei[val].id)
+          }
+        }
+      }
+      oldval.target = newval.target
+      oldval.id = newval.id
+      oldval.len = newval.target.length
+      oldval.rounds = newval.rounds
+      if (!newId[0]) return obj.sum
+      newLen = newId.length
+      newRounds = oldval.rounds + 1
+      newval.target = newTarget
+      newval.id = newId
+      newval.len = newLen
+      newval.rounds = newRounds
+      sum.target = sum.target.concat(newTarget)
+      sum.id = sum.id.concat(newId)
+      sum.len = sum.target.length
+      var newObj = {
+        newval: newval,
+        oldval: oldval,
+        sum: sum
+      }
+      return this.searchZero(newObj)
+    },
+    allNei (obj) {
+      var target = obj.target
+      var id = obj.id
+      var newObj = {
+        target: [],
+        id: []
+      }
+      for (var i = 0; i < target.length; i++) {
+        var nei = target[i].neighbor
+        for (var val in nei) {
+          if (!nei[val]) continue // 跳过undefined
+          if (nei[val].opening) continue // 跳过已经打开的旗子
+          if (newObj.id.includes(nei[val].id) || id.includes(nei[val].id)) continue // 跳过已经push的以及原有的
+          newObj.target.push(nei[val])
+          newObj.id.push(nei[val].id)
+        }
+      }
+      newObj.target = target.concat(newObj.target)
+      newObj.id = id.concat(newObj.id)
+      return newObj
+    },
+    // 生成对应雷的个数
     ranDom (item) {
-      var max = item.row * item.col
-      var arrMineId = []
+      var max = this.inInitMsg.row * this.inInitMsg.col
+      if (+item.arrNbrId.length >= max || +this.inInitMsg.sweeps > max - item.arrNbrId.length) {
+        alert('雷的数量超出了')
+        return
+      }
+      var ranNum // 随机数
+      var arr = [] // 初始化所有雷的id
       var i = 0
-      var arrNbrId = this.arrNbrId(item)
       // 生成雷
-      while (i < item.sweeps) {
-        var ranNum = Math.ceil(Math.random() * max)
-        if (arrMineId.includes(ranNum) || arrNbrId.includes(ranNum)) {
+      while (i < this.inInitMsg.sweeps) {
+        ranNum = this.rdmNum(max)
+        if (arr.includes(ranNum) || item.arrNbrId.includes(ranNum)) {
           continue
         } else {
           i++
-          arrMineId.push(ranNum)
+          this.list[ranNum - 1].bad = true
+          arr.push(ranNum)
         }
       }
-      return arrMineId
+      this.arrMineId = arr
+    },
+    // 生成一个1-num大小的随机数
+    rdmNum (max) {
+      return Math.ceil(Math.random() * max)
     },
     // 计算一个旗子周围的9个邻居旗子
-    nbrItem (item) {
+    nbrItem (item, maxRow, maxCol) {
+      var scope = this
+      var row = item.ads.row
+      var col = item.ads.col
+      var lu = this.adsToid(row - 1, col - 1, maxRow, maxCol) - 1
+      var u = this.adsToid(row - 1, col, maxRow, maxCol) - 1
+      var ru = this.adsToid(row - 1, col + 1, maxRow, maxCol) - 1
+      var l = this.adsToid(row, col - 1, maxRow, maxCol) - 1
+      var r = this.adsToid(row, col + 1, maxRow, maxCol) - 1
+      var ld = this.adsToid(row + 1, col - 1, maxRow, maxCol) - 1
+      var d = this.adsToid(row + 1, col, maxRow, maxCol) - 1
+      var rd = this.adsToid(row + 1, col + 1, maxRow, maxCol) - 1
       var nbrObj = {
-        lu: {},
-        u: {},
-        ru: {},
-        l: {},
-        self: {},
-        r: {},
-        ld: {},
-        d: {},
-        rd: {}
+        lu: scope.list[lu],
+        u: scope.list[u],
+        ru: scope.list[ru],
+        l: scope.list[l],
+        self: item,
+        r: scope.list[r],
+        ld: scope.list[ld],
+        d: scope.list[d],
+        rd: scope.list[rd]
       }
-      // var arrNbrId = this.arrNbrId(item)
       return nbrObj
+    },
+    // 坐标转id
+    adsToid (row, col, maxRow, maxCol) {
+      if (col <= 0 || row <= 0 || col > maxRow || row > maxCol) {
+        return 0
+      }
+      return (row - 1) * maxRow + col
     },
     // 统计点击的那个旗子周围旗子的id
     arrNbrId (item) {
-      var arrNbrId = []
+      var arr = []
       for (var val in item.neighbor) {
-        item.neighbor[val] ? arrNbrId.push(item.neighbor[val].id) : arrNbrId.push(undefined)
+        item.neighbor[val] ? arr.push(item.neighbor[val].id) : void 0
       }
-      return arrNbrId
+      return arr
     },
-    // 统计所有旗子坐标
-    initAds () {
-      for (var i = 0; i < this.list.length; i++) {
-        this.arrAds = this.arrAds.push(this.list[i].ads)
+    arrNbrFlags (item) {
+      var arr = []
+      var nei = item.neighbor
+      for (var val in nei) {
+        if (!nei[val]) continue
+        nei[val].flag ? arr.push(nei[val].id) : void 0
       }
+      return arr
+    },
+    arrNbrnOpen (item) {
+      var arr = []
+      var nei = item.neighbor
+      for (var val in nei) {
+        if (!nei[val]) continue
+        if (nei[val].flag) continue
+        if (nei[val].opening) continue
+        arr.push(nei[val])
+      }
+      return arr
     }
   }
 }
 </script>
 
 <style scoped>
-.shMines {
+.styLiMsg {
   background-color: red;
 }
 div {
