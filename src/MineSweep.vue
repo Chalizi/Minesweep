@@ -5,9 +5,11 @@
       <Scorecard
         :inInitMsg = "initCekMsg"
         :inInitState = "initState"
+        @theme = "handleTheme"
       ></Scorecard>
       <Checkerboard
         :inInitMsg = "initMenuMsg"
+        :inInitTheme = "initTheme"
         @gamestate = "handleState"
         @game = "handleGame"
       ></Checkerboard>
@@ -32,6 +34,7 @@ export default {
     return {
       initMenuMsg: null,
       initCekMsg: null,
+      initTheme: null,
       initState: false
     }
   },
@@ -52,6 +55,9 @@ export default {
     },
     handleState (bol) {
       this.initState = bol
+    },
+    handleTheme (obj) {
+      this.initTheme = obj
     }
   }
 }

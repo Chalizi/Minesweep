@@ -14,6 +14,7 @@
       <li
         v-for = "item in btn"
         :key = "item.id"
+        @click = "handleTheme(item)"
       >{{item.msg}}
       </li>
     </ul>
@@ -93,6 +94,41 @@ export default {
       } else {
         clearInterval(this.clock)
       }
+    }
+  },
+  methods: {
+    handleTheme (item) {
+      var id = item.id
+      var obj = null
+      switch (id) {
+        case 1:
+          obj = this.initTheme('grayTheme')
+          break
+        case 2:
+          obj = this.initTheme('blueTheme')
+          break
+        case 3:
+          obj = this.initTheme('whiteTheme')
+          break
+        case 4:
+          obj = this.initTheme('redTheme')
+          break
+        case 5:
+          obj = this.initTheme('violetTheme')
+          break
+      }
+      this.$emit('theme', obj)
+    },
+    initTheme (item) {
+      var obj = {
+        redTheme: false,
+        blueTheme: false,
+        grayTheme: false,
+        whiteTheme: false,
+        violetTheme: false
+      }
+      obj[item] = true
+      return obj
     }
   }
 }

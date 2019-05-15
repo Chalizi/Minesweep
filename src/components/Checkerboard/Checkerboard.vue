@@ -7,7 +7,7 @@
       @click = "handleClick(item)"
       @contextmenu = "handleMouseup"
       :index = "item.id - 1"
-      :class = "{'styLiMsg': !item.opening}"
+      :class = "{'redStyLi': !item.opening && redTheme, 'blueStyLi': !item.opening && blueTheme, 'grayStyLi': !item.opening && grayTheme, 'whiteStyLi': !item.opening && whiteTheme, 'violetStyLi': !item.opening && violetTheme}"
     >{{item.msg}}</li>
   </ul>
 </div>
@@ -17,7 +17,7 @@
 import '../../assets/js/game.js'
 
 export default {
-  props: ['inInitMsg'],
+  props: ['inInitMsg', 'inInitTheme'],
   data () {
     return {
       list: [],
@@ -34,7 +34,12 @@ export default {
       isMarkTrue: 0, // 标记正确的数量
       initCekMsg: {
         flags: 0
-      }
+      },
+      redTheme: true,
+      blueTheme: false,
+      grayTheme: false,
+      whiteTheme: false,
+      violetTheme: false
     }
   },
   watch: {
@@ -46,6 +51,13 @@ export default {
       this.format(newval, row, col) // 棋盘格式化
       this.initCekMsg.flags = newval.sweeps // 绑定旗帜的数量
       this.changeSre() // 雷数改变，旗帜也改
+    },
+    inInitTheme (newval, oldval) {
+      this.redTheme = newval.redTheme
+      this.blueTheme = newval.blueTheme
+      this.grayTheme = newval.grayTheme
+      this.whiteTheme = newval.whiteTheme
+      this.violetTheme = newval.violetTheme
     }
   },
   methods: {
@@ -420,8 +432,20 @@ export default {
 </script>
 
 <style scoped>
-.styLiMsg {
+.redStyLi {
   background-color: red;
+}
+.blueStyLi {
+  background-color: blue;
+}
+.whiteStyLi {
+  background-color: white;
+}
+.violetStyLi {
+  background-color: violet;
+}
+.grayStyLi {
+  background-color: gray;
 }
 div {
   position: absolute;
