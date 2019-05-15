@@ -1,5 +1,5 @@
 <template>
-  <h1>扫雷</h1>
+  <h1>扫雷version-0.22</h1>
 </template>
 
 <script>
