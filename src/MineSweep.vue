@@ -29,7 +29,8 @@ import Menu from './components/Menu/Menu'
 import Scorecard from './components/Scorecard/Scorecard'
 import Checkerboard from './components/Checkerboard/Checkerboard'
 
-export default {
+var mineSweep = {
+  name: 'MineSweep',
   data () {
     return {
       initMenuMsg: null,
@@ -38,7 +39,6 @@ export default {
       initState: false
     }
   },
-  name: 'MineSweep',
   components: {
     'Header': Header,
     'Footer': Footer,
@@ -49,9 +49,11 @@ export default {
   methods: {
     handleNewGame (initMenuMsg) {
       this.initMenuMsg = initMenuMsg
+      this.initState = initMenuMsg.bol
     },
     handleGame (initCekMsg) {
       this.initCekMsg = initCekMsg
+      this.initCekMsg.sweeps = this.initMenuMsg.sweeps
     },
     handleState (bol) {
       this.initState = bol
@@ -61,6 +63,8 @@ export default {
     }
   }
 }
+
+export default mineSweep
 </script>
 
 <style scoped>

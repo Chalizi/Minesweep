@@ -5,7 +5,7 @@
       v-for = "item in list"
       :key = "item.id"
       @click = "handleClick(item)"
-      @contextmenu = "handleMouseup"
+      @contextmenu = "handleMouseup(item, $event)"
       :index = "item.id - 1"
       :class = "{'redStyLi': !item.opening && redTheme, 'blueStyLi': !item.opening && blueTheme, 'grayStyLi': !item.opening && grayTheme, 'whiteStyLi': !item.opening && whiteTheme, 'violetStyLi': !item.opening && violetTheme}"
     >{{item.msg}}</li>
@@ -175,6 +175,7 @@ export default {
       if (!this.numOpens) { // 还没有旗子打开
         this.$emit('gamestate', true)
         this.ranDom(item) // 生成雷id
+        this.initCekMsg.flags = this.inInitMsg.sweeps
       }
       var arrItem = this.allNei(this.clickZero(item)).target
       for (var i = 0; i < arrItem.length; i++) {
@@ -198,10 +199,7 @@ export default {
       return this.searchZero(obj)
     },
     // 右键事件
-    handleMouseup (e) {
-      e.preventDefault()
-      var id = e.target.getAttribute('index')
-      var item = this.list[id]
+    handleMouseup (item, event) {
       if (item.opening) return // 未打开的旗子
       this.marked(item)
       if (this.isMarkTrue === this.inInitMsg.sweeps) this.victory()

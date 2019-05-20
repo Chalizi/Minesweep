@@ -47,7 +47,7 @@ export default {
   },
   methods: {
     handleSubmit (id) {
-      // if (!confirm('将会重置棋盘？确认吗？')) return
+      if (!confirm('将会重置棋盘？确认吗？')) return
       var initMenuMsg
       var click = !this.click
       if (id === 2 || id === 3) {
@@ -67,7 +67,8 @@ export default {
         col: +scope.col,
         sweeps: +scope.sweeps,
         level: +scope.level,
-        click: scope.click
+        click: scope.click,
+        bol: false
       }
       this.$emit('newGame', initMenuMsg)
     },
