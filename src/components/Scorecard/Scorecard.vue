@@ -82,7 +82,6 @@ export default {
     inInitMsg (newval, oldval) {
       this.list[1].content = this.inInitMsg.flags
       this.list[3].content = this.inInitMsg.level
-      this.list[0].content = this.inInitMsg.sweeps
     },
     inInitState (newval, oldval) {
       var scope = this

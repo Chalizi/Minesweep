@@ -29,7 +29,7 @@ import Menu from './components/Menu/Menu'
 import Scorecard from './components/Scorecard/Scorecard'
 import Checkerboard from './components/Checkerboard/Checkerboard'
 
-var mineSweep = {
+export default {
   name: 'MineSweep',
   data () {
     return {
@@ -63,8 +63,6 @@ var mineSweep = {
     }
   }
 }
-
-export default mineSweep
 </script>
 
 <style scoped>
